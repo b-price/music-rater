@@ -123,6 +123,7 @@ const App: React.FC = () => {
     const handleSearch = useCallback(
         async (e: React.FormEvent) => {
             e.preventDefault();
+            setShowVisualization(false);
             setLoading(true);
             setError(null);
             try {

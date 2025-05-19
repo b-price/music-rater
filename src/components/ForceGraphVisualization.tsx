@@ -138,12 +138,27 @@ const ForceGraphVisualization: React.FC<ForceGraphVisualizationProps> = ({ ratin
                 <div style={{ height: '600px', width: '100%' }}>
                     <ForceGraph2D
                         graphData={graphData}
-                        nodeLabel={node => `${node.name} (Rating: ${node.val.toFixed(1)})`}
-                        nodeColor={node => node.color}
-                        nodeRelSize={6}
-                        linkWidth={link => link.value}
-                        cooldownTicks={100}
-                        onEngineStop={() => console.log('Graph rendering complete')}
+                        nodeLabel="name"
+                        nodeAutoColorBy={null}
+                        nodeCanvasObject={(node, ctx, globalScale) => {
+                            const label = node.name;
+                            const size = 12 / globalScale;
+                            ctx.beginPath();
+                            ctx.arc(node.x!, node.y!, size, 0, 2 * Math.PI, false);
+                            ctx.fillStyle = node.color;
+                            ctx.fill();
+
+                            const fontSize = 12 / globalScale;
+                            ctx.font = `${fontSize}px Sans-Serif`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillStyle = 'black';
+                            ctx.fillText(label, node.x!, node.y! + size + fontSize);
+                        }}
+                        nodeCanvasObjectMode={() => 'replace'}
+                        linkColor={() => 'rgba(0,0,0,0.2)'}
+                        width={800}
+                        height={600}
                     />
                 </div>
             </Card.Body>
