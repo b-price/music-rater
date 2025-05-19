@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState, lazy, Suspense} from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {Alert, Button, Card, Col, Container, Form, ListGroup, Row, Spinner,} from "react-bootstrap";
 import {MusicBrainzApi} from "musicbrainz-api";
@@ -87,6 +87,8 @@ interface Artist {
     albums?: Album[];
 }
 
+const RatingGraph = lazy(() => import('./RatingGraph'));
+
 const App: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [searchType, setSearchType] = useState<Entity>("artist");
@@ -102,6 +104,7 @@ const App: React.FC = () => {
     );
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [showGraph, setShowGraph] = useState(false);
 
     useEffect(() => {
         localStorage.setItem("ratings", JSON.stringify(ratings));
@@ -231,6 +234,13 @@ const App: React.FC = () => {
                             Search
                         </Button>
                     </Form>
+                    <Button
+                        variant="outline-secondary"
+                        className="mt-2"
+                        onClick={() => setShowGraph(!showGraph)}
+                    >
+                        {showGraph ? 'Hide' : 'Show'} Ratings Graph
+                    </Button>
                 </Col>
             </Row>
 
@@ -513,6 +523,11 @@ const App: React.FC = () => {
                                 )}
                             </Col>
                         </Row>
+                    )}
+                    {showGraph && (
+                        <Suspense fallback={<Spinner animation="border" />}>
+                            <RatingGraph ratings={ratings} />
+                        </Suspense>
                     )}
                 </>
             )}
