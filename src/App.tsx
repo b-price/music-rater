@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState, lazy, Suspense} from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {Alert, Button, Card, Col, Container, Form, ListGroup, Row, Spinner,} from "react-bootstrap";
 import {MusicBrainzApi} from "musicbrainz-api";
@@ -87,6 +87,10 @@ interface Artist {
     albums?: Album[];
 }
 
+const ForceGraphVisualization = lazy(() =>
+    import('./components/ForceGraphVisualization')
+);
+
 const App: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [searchType, setSearchType] = useState<Entity>("artist");
@@ -102,6 +106,7 @@ const App: React.FC = () => {
     );
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [showVisualization, setShowVisualization] = useState<boolean>(false);
 
     useEffect(() => {
         localStorage.setItem("ratings", JSON.stringify(ratings));
@@ -211,28 +216,51 @@ const App: React.FC = () => {
             <Row className="justify-content-center mb-4">
                 <Col xs={12} md={8} lg={6}>
                     <h1 className="text-center mb-4">Music Rater</h1>
-                    <Form onSubmit={handleSearch} className="d-flex gap-2">
-                        <Form.Select
-                            value={searchType}
-                            onChange={(e) => setSearchType(e.target.value as Entity)}
-                            style={{ width: "120px" }}
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <Form onSubmit={handleSearch} className="d-flex gap-2">
+                            <Form.Select
+                                value={searchType}
+                                onChange={(e) => setSearchType(e.target.value as Entity)}
+                                style={{ width: "120px" }}
+                            >
+                                <option value="artist">Artist</option>
+                                <option value="release-group">Album</option>
+                                <option value="recording">Song</option>
+                            </Form.Select>
+                            <Form.Control
+                                type="text"
+                                placeholder={`Search for ${searchType}...`}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            <Button type="submit" disabled={loading}>
+                                Search
+                            </Button>
+                        </Form>
+                        <Button
+                            variant="outline-primary"
+                            onClick={() => setShowVisualization(!showVisualization)}
                         >
-                            <option value="artist">Artist</option>
-                            <option value="release-group">Album</option>
-                            <option value="recording">Song</option>
-                        </Form.Select>
-                        <Form.Control
-                            type="text"
-                            placeholder={`Search for ${searchType}...`}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <Button type="submit" disabled={loading}>
-                            Search
+                            {showVisualization ? "Hide" : "Show"} Artist Network
                         </Button>
-                    </Form>
+                    </div>
                 </Col>
             </Row>
+
+            {showVisualization && (
+                <Row className="justify-content-center">
+                    <Col xs={12} md={10} lg={8}>
+                        <Suspense fallback={
+                            <Card className="my-4 p-4 text-center">
+                                <Spinner animation="border" />
+                                <p>Loading visualization...</p>
+                            </Card>
+                        }>
+                            <ForceGraphVisualization ratings={ratings} />
+                        </Suspense>
+                    </Col>
+                </Row>
+            )}
 
             {loading && (
                 <Row className="justify-content-center">
